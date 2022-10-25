@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Menu : MonoBehaviour
 {
@@ -20,13 +22,28 @@ public class Menu : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI moveCounter;
 
+    [SerializeField]
+    private Slider chipSpeedSlider;
+
+    [SerializeField]
+    private TextMeshProUGUI chipSpeedText;
+
+    private int InitialChipSpeed { get; set; } = 10;
+
     public List<string> TextOptions { get; set; } = new();
     public List<TMP_Dropdown.OptionData> Options { get; set; } = new();
 
     private void Start()
     {
+        PlayerPrefs.DeleteAll();
+
         GameManager.LoadPlaygroundsEvent.AddListener(OnPlaygroundsLoad);
         GameManager.WinEvent.AddListener(OnWin);
+
+        int chipSpeed = PlayerPrefs.GetInt("ChipSpeed");
+        if (chipSpeed == 0) chipSpeed = InitialChipSpeed;
+        chipSpeedSlider.value = chipSpeed;
+        OnChangeChipSpeed(chipSpeed);
     }
 
     private void Update()
@@ -86,6 +103,13 @@ public class Menu : MonoBehaviour
     public void OnResume()
     {
         pauseMenuCanvas.SetActive(false);
+    }
+
+    public void OnChangeChipSpeed(Single speed)
+    {
+        chipSpeedText.text = $"Chip Speed: {(int)speed}";
+        PlayerPrefs.SetInt("ChipSpeed", (int)speed);
+        Chip.MovementSpeed = (int)speed;
     }
 
     public void OnExitGame()

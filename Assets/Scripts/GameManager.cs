@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,12 +32,6 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private GameObject background;
 
-
-    [Header("Chip settings")]
-
-    [SerializeField, Range(1, 100)]
-    private int chipMovementSpeed;
-
     private List<string> Playgrounds { get; set; } = new();
     private List<string> PlaygroundNames { get; set; } = new();
     private IGridPositionable[,] Playground { get; set; }
@@ -64,18 +59,13 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         LoadPlaygrounds();
-        SetChipSettings();
+
+        Chip.ChangePositionEvent.AddListener(OnChipChangePosition);
 
         void LoadPlaygrounds()
         {
             Playgrounds = FillLevelList(presets);
             LoadPlaygroundsEvent.Invoke(PlaygroundNames);
-        }
-
-        void SetChipSettings()
-        {
-            Chip.MovementSpeed = chipMovementSpeed;
-            Chip.ChangePositionEvent.AddListener(OnChipChangePosition);
         }
     }
 
@@ -91,7 +81,7 @@ public class GameManager : MonoBehaviour
                 Vector2Int newPositionOnGrid = Chip.ActiveChip.PositionOnGrid + new Vector2Int(horizontal, vertical);
                 if (newPositionOnGrid.x < 0 || newPositionOnGrid.x > Playground.GetUpperBound(0)) newPositionOnGrid.x -= horizontal;
                 if (newPositionOnGrid.y < 0 || newPositionOnGrid.y > Playground.GetUpperBound(1)) newPositionOnGrid.y -= vertical;
-                if (Playground[newPositionOnGrid.x, newPositionOnGrid.y] is EmptyField emptyField && Chip.MovementIsAllowed(emptyField.PositionOnGrid)) Chip.ActiveChip.MoveOverGrid(emptyField.PositionOnGrid, emptyField.transform.position);
+                if (Playground[newPositionOnGrid.x, newPositionOnGrid.y] is EmptyField emptyField && Chip.MovementIsAllowed(emptyField)) Chip.ActiveChip.MoveOverGrid(emptyField);
             }
         }
     }
@@ -159,6 +149,7 @@ public class GameManager : MonoBehaviour
                         }
                     }
                     Playground[columnNumber, rowNumber] = chipOrField;
+                    if (Playground[columnNumber, rowNumber] is EmptyField notOccupiedField) notOccupiedField.Occupied = false;
                 }
             }
         }
@@ -213,13 +204,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     private void OnChipChangePosition(Vector2Int previousPosition, Vector2Int newPosition)
     {
         Moves += 1;
 
         Playground[newPosition.x, newPosition.y] = Playground[previousPosition.x, previousPosition.y];
         Playground[previousPosition.x, previousPosition.y] = EmptyPlayground[previousPosition.x, previousPosition.y];
+        if (EmptyPlayground[previousPosition.x, previousPosition.y] is EmptyField relievedField) relievedField.Occupied = false;
 
         if (CheckWinCondition()) WinEvent.Invoke(Moves);
 

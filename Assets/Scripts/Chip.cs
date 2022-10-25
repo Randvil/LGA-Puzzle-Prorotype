@@ -52,7 +52,7 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
     {
         RaycastResult result = eventData.pointerCurrentRaycast;
         EmptyField field = result.gameObject == null ? null : result.gameObject.GetComponent<EmptyField>();
-        if (field != null && IsNeighbour(field.PositionOnGrid)) MoveOverGrid(field.PositionOnGrid, field.transform.position);
+        if (field != null && MovementIsAllowed(field)) MoveOverGrid(field);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -81,33 +81,34 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
         SpriteRenderer.color = InitialColor;
     }
 
-    public static bool MovementIsAllowed(Vector2Int positionOnGrid)
+    public static bool MovementIsAllowed(EmptyField field)
     {
-        return ActiveChip != null && ActiveChip.IsNeighbour(positionOnGrid);
-    }
+        return ActiveChip != null && IsNeighbour() && !field.Occupied;
 
-    public bool IsNeighbour(Vector2Int positionOnGrid)
-    {
-        Vector2Int difference = positionOnGrid - PositionOnGrid;
-        return Mathf.Abs(difference.x) + Mathf.Abs(difference.y) == 1;
-    }
-
-    public void MoveOverGrid(Vector2Int positionOnGrid, Vector2 position)
-    {
-        ChangePositionCoroutine ??= StartCoroutine(ChangePosition(positionOnGrid, position));
-    }
-
-    private IEnumerator ChangePosition(Vector2Int positionOnGrid, Vector2 position)
-    {
-        while (Vector2.Distance(transform.position, position) > 0.01f)
+        bool IsNeighbour()
         {
-            Vector2 newPosition = Vector2.MoveTowards(transform.position, position, MovementSpeed * Time.deltaTime);
+            Vector2Int difference = field.PositionOnGrid - ActiveChip.PositionOnGrid;
+            return Mathf.Abs(difference.x) + Mathf.Abs(difference.y) == 1;
+        }
+    }
+
+    public void MoveOverGrid(EmptyField field)
+    {
+        field.Occupied = true;
+        ChangePositionCoroutine ??= StartCoroutine(ChangePosition(field));
+    }
+
+    private IEnumerator ChangePosition(EmptyField field)
+    {
+        while (Vector2.Distance(transform.position, field.transform.position) > 0.01f)
+        {
+            Vector2 newPosition = Vector2.MoveTowards(transform.position, field.transform.position, MovementSpeed * Time.deltaTime);
             transform.position = newPosition;
             yield return null;
         }
-        transform.position = position;
+        transform.position = field.transform.position;
         Vector2Int previousPosition = PositionOnGrid;
-        PositionOnGrid = positionOnGrid;
+        PositionOnGrid = field.PositionOnGrid;
 
         ChangePositionEvent.Invoke(previousPosition, PositionOnGrid);
         ChangePositionCoroutine = null;

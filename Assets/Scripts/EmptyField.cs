@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 public class EmptyField : MonoBehaviour, IGridPositionable, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     public Vector2Int PositionOnGrid { get; set; }
+    public bool Occupied { get; set; } = true;
 
     private SpriteRenderer SpriteRenderer { get; set; }
     private Sprite InitialSprite { get; set; }
@@ -19,7 +20,7 @@ public class EmptyField : MonoBehaviour, IGridPositionable, IPointerEnterHandler
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (Chip.MovementIsAllowed(PositionOnGrid)) SpriteRenderer.sprite = Chip.ActiveChip.SpriteRenderer.sprite;
+        if (Chip.MovementIsAllowed(this)) SpriteRenderer.sprite = Chip.ActiveChip.SpriteRenderer.sprite;
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -29,6 +30,6 @@ public class EmptyField : MonoBehaviour, IGridPositionable, IPointerEnterHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (Chip.MovementIsAllowed(PositionOnGrid)) Chip.ActiveChip.MoveOverGrid(PositionOnGrid, transform.position);
+        if (Chip.MovementIsAllowed(this)) Chip.ActiveChip.MoveOverGrid(this);
     }
 }
