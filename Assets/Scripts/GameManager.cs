@@ -96,7 +96,7 @@ public class GameManager : MonoBehaviour
             levelsArray[i] = levelsArray[i].Trim();
             PlaygroundNames.Add(levelsArray[i].Split('\n')[0]);
 
-            levels.Add(levelsArray[i].Substring(PlaygroundNames[i].Length).Trim());
+            levels.Add(levelsArray[i][PlaygroundNames[i].Length..].Trim());
         }
 
         return levels;

@@ -29,19 +29,17 @@ public class Menu : MonoBehaviour
     private TextMeshProUGUI chipSpeedText;
 
     private int InitialChipSpeed { get; set; } = 10;
+    private string ChipSpeedKey { get; set; } = "ChipSpeed";
 
     public List<string> TextOptions { get; set; } = new();
     public List<TMP_Dropdown.OptionData> Options { get; set; } = new();
 
     private void Start()
     {
-        PlayerPrefs.DeleteAll();
-
         GameManager.LoadPlaygroundsEvent.AddListener(OnPlaygroundsLoad);
         GameManager.WinEvent.AddListener(OnWin);
 
-        int chipSpeed = PlayerPrefs.GetInt("ChipSpeed");
-        if (chipSpeed == 0) chipSpeed = InitialChipSpeed;
+        int chipSpeed = PlayerPrefs.GetInt(ChipSpeedKey, InitialChipSpeed);
         chipSpeedSlider.value = chipSpeed;
         OnChangeChipSpeed(chipSpeed);
     }
@@ -108,7 +106,7 @@ public class Menu : MonoBehaviour
     public void OnChangeChipSpeed(Single speed)
     {
         chipSpeedText.text = $"Chip Speed: {(int)speed}";
-        PlayerPrefs.SetInt("ChipSpeed", (int)speed);
+        PlayerPrefs.SetInt(ChipSpeedKey, (int)speed);
         Chip.MovementSpeed = (int)speed;
     }
 
