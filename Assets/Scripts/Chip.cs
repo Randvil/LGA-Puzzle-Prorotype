@@ -22,6 +22,7 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
 
     public Vector2Int PositionOnGrid { get; set; }
     public bool IsActive { get; private set; }
+    public bool IsMoving { get; private set; }
 
     public static int MovementSpeed { get; set; }
     public static Chip ActiveChip { get; private set; }
@@ -83,9 +84,9 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
 
     public static bool MovementIsAllowed(EmptyField field)
     {
-        return ActiveChip != null && IsNeighbour() && !field.Occupied;
+        return ActiveChip != null && !ActiveChip.IsMoving && FieldIsNeighbour() && !field.Occupied;
 
-        bool IsNeighbour()
+        bool FieldIsNeighbour()
         {
             Vector2Int difference = field.PositionOnGrid - ActiveChip.PositionOnGrid;
             return Mathf.Abs(difference.x) + Mathf.Abs(difference.y) == 1;
@@ -94,12 +95,14 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
 
     public void MoveOverGrid(EmptyField field)
     {
-        field.Occupied = true;
         ChangePositionCoroutine ??= StartCoroutine(ChangePosition(field));
     }
 
     private IEnumerator ChangePosition(EmptyField field)
     {
+        IsMoving = true;
+        field.Occupied = true;
+
         while (Vector2.Distance(transform.position, field.transform.position) > 0.01f)
         {
             Vector2 newPosition = Vector2.MoveTowards(transform.position, field.transform.position, MovementSpeed * Time.deltaTime);
@@ -109,6 +112,7 @@ public class Chip : MonoBehaviour, IGridPositionable, IBeginDragHandler, IDragHa
         transform.position = field.transform.position;
         Vector2Int previousPosition = PositionOnGrid;
         PositionOnGrid = field.PositionOnGrid;
+        IsMoving = false;
 
         ChangePositionEvent.Invoke(previousPosition, PositionOnGrid);
         ChangePositionCoroutine = null;
